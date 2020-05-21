@@ -1,0 +1,9 @@
+[package]
+name = "Code4Life_Rust"
+version = "0.1.0"
+authors = ["Fatma Erkan <erkann.fatma@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
