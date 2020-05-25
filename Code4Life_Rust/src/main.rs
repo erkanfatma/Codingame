@@ -1,41 +1,40 @@
 use std::io;
-
 //for random generator
-extern crate rand;
+//extern crate rand;
 use rand::Rng;
 // for foreach 
 use foreach::Continue::*;
 //for max operation
 use std::cmp;
 //for queue
-extern crate queues;
+//extern crate queues;
 use queues::*;
  
 enum MoleculeType { A, B, C, D, E }
  
 trait Module{
-     fn GetDesicion<T: Robot>(robot: T) -> ();
-     fn SampleResearchable<T: Robot>(robot: T) -> bool{
+     fn GetDesicion(robot: Robot) -> ();
+     fn SampleResearchable(robot: Robot) -> bool{
          let mut canDo: bool = robot.SamplesResearchable();
          println!("At least one research can be done: {}" , canDo);
         canDo;
      }
 
-     fn SampleDoable<T: Robot>(robot: T) -> bool{
+     fn SampleDoable(robot: Robot) -> bool{
          let mut canDo: bool = robot.SamplesDoable();
          println!("At least one sample can be done: {}", canDo);
          canDo;
      }
 }
  
-impl StartPoint: Module{
-    fn GetDesicion<T: Robot>(robot: T) -> (){
+impl StartPoint for Module {
+    fn GetDesicion(robot: Robot) -> (){
         robot.GoTo("SAMPLES");
     }
 }
  
-impl Samples: Module{
-    fn GetDesicion<T: Robot>(robot: T) -> (){
+impl Samples for Module {
+    fn GetDesicion(robot: Robot) -> (){
         let mut rng = rand::thread_rng();
          if robot.expertise.Sum() == 0 {
              if robot.samples.Count <2 {
@@ -69,8 +68,8 @@ impl Samples: Module{
     }
 }
  
-impl Diagnosis: Module{ 
-    fn GetDesicion<T: Robot>(robot: T) -> (){ 
+impl Diagnosis for Module {
+    fn GetDesicion(robot: Robot) -> (){
         let selectedSample: Sample = robot.ChooseDiagnosticableSample();
         if selectedSample == None {
             robot.Connect(selectedSample.id);
@@ -121,8 +120,8 @@ impl Diagnosis: Module{
     }
 }
  
-impl Molecules: Module{
-    fn GetDesicion<T: Robot>(robot: T) -> (){
+impl Molecules for Module {
+    fn GetDesicion(robot: Robot) -> (){
         let mut needed:[i32;5] = [0,0,0,0,0];
         //
         if robot.storage.Sum() <10 {
@@ -208,8 +207,8 @@ impl Molecules: Module{
     }
 }
 
-impl Laboratory: Module{
-    fn GetDesicion<T: Robot>(robot: T) -> (){
+impl Laboratory for Module {
+    fn GetDesicion(robot: Robot) -> (){
         if SampleResearchable(robot) {
             for_each!(sample in robot.samples{
                 if robot.CanResearchSample(sample) {
@@ -237,16 +236,12 @@ impl Laboratory: Module{
 }
 
 struct Project{
-    //
     expertise: [i32],
 }
-//impl Project{
-    
-// }
 
 struct Sample{
     id :i32,
-    cost[i32],
+    cost: [i32],
     health: i32,
     rank: i32,
     gain: MoleculeType,
@@ -255,11 +250,11 @@ struct Sample{
 
 impl Struct{
     //
-    diagnosticated = Array.exist(cost, number == -1) ? false: true;
+    //diagnosticated = Array.exist(cost, number == -1) ? false: true;
 }
 
-struct Molecule{
-    type: MoleculeType,
+struct Molecule {
+    moltype : MoleculeType,
 }
 
 struct Robot{
@@ -278,11 +273,11 @@ impl Robot{
         target.GetDesicion();
     }
 
-    fn CanCollectMolecules<T: Sample>(sample: T) -> bool{
+    fn CanCollectMolecules(sample: Sample) -> bool{
         let mut nbNeeded: i32 = 0;
         let mut canDo:bool = true;
 
-        for i in 0...5 as usize{
+        for i in 0..5 as usize{
             nbNeeded += cmp::max(0, sample.cost[i] - storage[i] - expertise[i]);
         }
         //
@@ -310,13 +305,13 @@ impl Robot{
         false;
     }
 
-    fn IsSampleGoodForProjects<T:Sample(sample: T) -> bool{
+    fn IsSampleGoodForProjects(sample: Sample) -> bool{
         let mut isGood:bool = true;
         //
         if expertise.Sum() >= 6 {
             let mut goals:[i32;5] = [0,0,0,0,0];
             for_each!(project in Player.projects{
-                for i in 0...5 as usize{
+                for i in 0..5 as usize{
                     goals[i] = cmp::max(project.expertise[i], goals[i]);
                 }
             });
@@ -329,15 +324,15 @@ impl Robot{
         isGood;
     }
 
-    fn ScoreFromProject<T: Project>(project:T) ->i32{
+    fn ScoreFromProject(project: Project) ->i32{
         let mut score:i32 = 0;
-        for i in 0...5 as usize{
+        for i in 0..5 as usize{
             score += cmp::max(project.expertise[i] -expertise[i],0);
         }
         score;
     }
 
-    fn IsCloseToProjectEnd<T: Sample>(sample:T) -> bool{
+    fn IsCloseToProjectEnd(sample: Sample) -> bool{
         let mut closestProject: Project = ClosestProject();
 
         if CanDoSample(sample) {
@@ -349,17 +344,17 @@ impl Robot{
         false;
     }
 
-    fn neededForSample<T: Sample>(sample: T) -> i32{
+    fn neededForSample(sample: Sample) -> i32{
         let mut needed:[i32;5] = [0,0,0,0,0];
-        for i in 0...5 as usize{
+        for i in 0..5 as usize{
             needed[i] = cmp::max(sample.cost[i] -expertise[i] - storage[i],0);
         }
         needed.Sum();
     }
 
-    fn ClosestProject() -> Project{
+    fn ClosestProject() -> Project {
         let mut minScore: i32 = 20;
-        let mut cProject:Project = Player.projects.First();
+        let mut cProject = Player.projects.First();
 
         for_each!(p in Player.Projects{
             let mut tempScore:i32 = ScoreFromProject(p);
@@ -374,16 +369,16 @@ impl Robot{
 
     fn ChooseDiagnosticableSample() -> Sample {
         // ???
-        let tempSamples: vec! =
+       // let tempSamples: Vec =
    //     List<Sample> tempSamples = samples.Where(sample => sample.diagnosticated == false).ToList();
      //   return tempSamples.Count == 0 ? null : tempSamples.OrderByDescending(sample => sample.health).First();
     
     }
 
-    fn CanResearchSample<T:Sample>(sample: T) -> bool {
+    fn CanResearchSample(sample: Sample) -> bool {
         let mut canDo:bool = true;
 
-        for i in 0...3 as usize{
+        for i in 0..3 as usize{
             if storage[i] + expertise[i] < sample.cost[i] {
                 canDo = false;                
             }
@@ -392,12 +387,12 @@ impl Robot{
         canDo;
     }
 
-    fn CanDoSample<T:Sample>(sample: T) -> bool{
+    fn CanDoSample(sample: Sample) -> bool{
         let mut canDo:bool = true;
         if !CanResearchSample(sample) && storage.Sum() >=10 || IsSampleGoodForProjects(sample) {
             canDo = false;
         }else{
-            for i in 0...5 as usize{
+            for i in 0..5 as usize{
                 if Player.available[i] + storage[i] + expertise[i] < sample.cost[i] {
                     canDo = false;
                     break;
@@ -416,8 +411,8 @@ impl Robot{
         println!("CONNECT {}", id);
     }
 
-    fn Connect<T:MoleculeType>(type: T) -> (){
-        println!("CONNECT {}", type );
+    fn ConnectMol(moltype: MoleculeType) -> (){
+        println!("CONNECT {}", moltype );
     }
 
     fn Wait() -> (){
@@ -426,22 +421,20 @@ impl Robot{
 
 }
 
-struct Player{
-    static samplesTaken: i32, 
-    static available: [i32],
+struct Player {
+    samplesTaken: i32,
+    available: [i32],
     //
-    static projects: Vec::new(),
-    static robots: Vec::new(),
-    static samples: Vec::new(),
+    projects: Vec::new(),
+    robots: Vec::new(),
+    samples: Vec::new(),
 
 }
-
-impl Player{
-
 macro_rules! parse_input {
     ($x:expr, $t:ident) => ($x.trim().parse::<$t>().unwrap())
 }
 
+impl Player{
     /**
     * Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
     **/
@@ -490,19 +483,19 @@ macro_rules! parse_input {
                 let mut modTarget:Module = None;
                 match target{
                     "START_POS" =>{
-                        modTarget = new StartPoint();
+                        modTarget = StartPoint();
                     },
                     "SAMPLES" =>{
-                        modTarget = new Samples();
+                        modTarget = Samples();
                     },
                     "DIAGNOSIS" =>{
-                        modTarget = new Diagnosis();
+                        modTarget = Diagnosis();
                     },
                     "MOLECULES" => {
-                        modTarget = new Molecules();
+                        modTarget = Molecules();
                     },
                     "LABORATORY" =>{
-                        modTarget = new Laboratory();
+                        modTarget = Laboratory();
                     },
                     _ => {
                     }
@@ -510,8 +503,9 @@ macro_rules! parse_input {
 
                 let mut storageArray: [i32;5] = [storage_a, storage_b, storage_c, storage_d, storage_e];
                 let mut expertiseArray: [i32;5] = [expertise_a, expertise_b, expertise_c, expertise_d, expertise_e];
-                
-                robots.push(Robot {modTarget, eta,score, storageArray, expertiseArray});
+
+                let rbt = Robot(modTarget, eta,score, storageArray, expertiseArray);
+                robots.push(rbt);
 
 
             }
@@ -541,9 +535,9 @@ macro_rules! parse_input {
                 let cost_d = parse_input!(inputs[8], i32);
                 let cost_e = parse_input!(inputs[9], i32);
 
-                let mut costArray: [i32;5] = [cost_a, cost_b, cost_c, cost_d, cost_e];
-                
-                thisSample: Sample {sample_id, costArray, health, rank, expertise_gain};
+                let mut cost_array: [i32;5] = [cost_a, cost_b, cost_c, cost_d, cost_e];
+
+                let thisSample = Sample(sample_id, cost_array, health, rank, expertise_gain);
                 
                 match carried_by{
                     -1 =>{
@@ -557,13 +551,13 @@ macro_rules! parse_input {
                     }
                 }
 
-                let mut myRobot: Robot = robots[0];
-                println!("Module : {}", myRobot.target);
-                println!("Storage (A B C D E) : {}", myRobot.storage);
-                println!("Expert. (A B C D E) : {}", myRobot.expertise);
-                let mut potential: [i32,5];
-                for i in 0...5 {
-                    potential[i] = myRobot.storage[i] + myRobot.expertise[i];
+                let mut my_robot: Robot = robots[0];
+                println!("Module : {}", my_robot.target);
+                println!("Storage (A B C D E) : {}", my_robot.storage);
+                println!("Expert. (A B C D E) : {}", my_robot.expertise);
+                let mut potential: [i32;5] = [0,0,0,0,0];
+                for i in 0..5 as usize{
+                    potential[i] = my_robot.storage[i] + my_robot.expertise[i];
                 }
 
                 for_each!(project in projects{
@@ -583,7 +577,7 @@ macro_rules! parse_input {
                     println!("Samp Cost (A B C D E) : {} - Rank {} - Health : {} - Gain : {} - ID : " sample.cost, sample.rank, sample.health, sample.gain, sample.id);
                 });
 
-                myRobot.Update();
+                my_robot.Update();
             }
 
             // Write an action using println!("message...");
