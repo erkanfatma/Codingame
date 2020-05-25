@@ -9,59 +9,59 @@ use std::cmp;
 //for queue
 //extern crate queues;
 use queues::*;
- 
-enum MoleculeType { A, B, C, D, E }
+use crate::MoleculeType::e;
+
+enum MoleculeType { a, b, c, d, e}
  
 trait Module{
-     fn GetDesicion(robot: Robot) -> ();
-     fn SampleResearchable(robot: Robot) -> bool{
-         let mut canDo: bool = robot.SamplesResearchable();
-         println!("At least one research can be done: {}" , canDo);
-        canDo;
+     fn get_desicion(robot: Robot) -> ();
+     fn sample_researchable(robot: Robot) -> bool{
+         let mut can_do: bool = robot.samples_researchable();
+         println!("At least one research can be done: {}" , can_do);
+        can_do;
      }
 
-     fn SampleDoable(robot: Robot) -> bool{
-         let mut canDo: bool = robot.SamplesDoable();
-         println!("At least one sample can be done: {}", canDo);
-         canDo;
+     fn sample_doable(robot: Robot) -> bool{
+         let mut can_do: bool = robot.samples_doable();
+         println!("At least one sample can be done: {}", can_do);
+         can_do;
      }
 }
  
 impl StartPoint for Module {
-    fn GetDesicion(robot: Robot) -> (){
-        robot.GoTo("SAMPLES");
+    fn get_desicion(robot: Robot) -> (){
+        robot.go_to("SAMPLES");
     }
 }
  
 impl Samples for Module {
-    fn GetDesicion(robot: Robot) -> (){
+    fn get_desicion(robot: Robot) -> (){
         let mut rng = rand::thread_rng();
-         if robot.expertise.Sum() == 0 {
-             if robot.samples.Count <2 {
-                 robot.Connect(1);
+         if robot.expertise.sum() == 0 {
+             if robot.samples.len() <2 {
+                 robot.connect(1);
                  return;
              }else{
-                 robot.GoTo("DIAGNOSIS");
+                 robot.go_to("DIAGNOSIS");
                  return;
              }
-         }else if robot.samples.Count <3 {
-             if robot.ScoreFromProject(robot.ClosestProject())<1 {
-                 robot.Connect(rng.gen_range(1, 4));
+         }else if robot.samples.len() <3 {
+             if robot.score_from_project(robot.closest_project())<1 {
+                 robot.connect(rng.gen_range(1, 4));
                  return;
              }
-             if robot.expertise.Sum() <6 {
-                 robot.Connect(1);
+             if robot.expertise.sum() <6 {
+                 robot.connect(1);
                  return;
-             }else if robot.expertise.Sum() <10  {
-                 //robot.Connect(rng.gen_range(1,3));
-                 robot.Connect(2);
+             }else if robot.expertise.sum() <10  {
+                 robot.connect(2);
                  return;
              }else{
-                 robot.Connect(3);
+                 robot.connect(3);
                  return;
              }
          }else{
-             robot.GoTo("DIAGNOSIS");
+             robot.go_to("DIAGNOSIS");
              return;
          }  
          return;
@@ -69,78 +69,79 @@ impl Samples for Module {
 }
  
 impl Diagnosis for Module {
-    fn GetDesicion(robot: Robot) -> (){
-        let selectedSample: Sample = robot.ChooseDiagnosticableSample();
-        if selectedSample == None {
-            robot.Connect(selectedSample.id);
+    fn get_desicion(robot: Robot) -> (){
+        let selected_sample: Sample = robot.choose_diagnosticable_sample();
+        if selected_sample == None {
+            robot.connect(selected_sample.id);
             return;
         }
         else{
             // We put apart samples not realisable
             for_each!(s in robot.Samples{
-                if !robot.CanDoSample(s) || (robot.neededForSample(s) >6 && s.rank <3) {
-                    robot.Connect(s.id);
+                if !robot.can_do_sample(s) || (robot.needed_for_sample(s) >6 && s.rank <3) {
+                    robot.connect(s.id);
                     return;
                 }
             }); 
 
             // We take researchable samples if they exist in the cloud
-            if robot.samples.Count<3 {
+            if robot.samples.len()<3 {
                 for_each!(s in Player.samples{
-                    if robot.CanResearchSample(s) && robot.neededForSample(s) <3 {
-                        robot.Connect(s.id);
+                    if robot._can_research_sample(s) && robot.needed_for_sample(s) <3 {
+                        robot.connect(s.id);
                         return;
                     }
                 });
             }
 
             // If we're really close to one project, we ditch all samples that do not help to finish it
-            if robot.samples.Count >0 && robot.ScoreFromProject(robot.ClosestProject())<1 {
+            if robot.samples.len() >0 && robot.score_from_project(robot.closest_project())<1 {
                 for_each!(sample in robot.samples{
-                    if !robot.IsCloseToProjectEnd(sample) {
-                        robot.Connect(sample.id);
+                    if !robot.is_close_to_project_end(sample) {
+                        robot.connect(sample.id);
                         return;
                     }
                 });
             }
 
             // if at least one sample is researchable goto lab
-            if SampleResearchable(robot) {
-                robot.GoTo("LABORATORY");
+            if sample_researchable(robot) {
+                robot.go_to("LABORATORY");
                 return;
             }
             // if at least one sample is realisable goto molecules
-            else if SampleDoable(robot) {
-                robot.GoTo("MOLECULES");
+            else if sample_doable(&robot) {
+                robot.go_to("MOLECULES");
                 return;
             }
         }
-        robot.GoTo("SAMPLES");
+        robot.go_to("SAMPLES");
         return;
     }
 }
  
 impl Molecules for Module {
-    fn GetDesicion(robot: Robot) -> (){
+    fn get_desicion(robot: Robot) -> (){
         let mut needed:[i32;5] = [0,0,0,0,0];
         //
-        if robot.storage.Sum() <10 {
+        if robot.storage.sum() <10 {
             let index: i32 = 0;
             //
-            for_each!(sample in robot.samples.OrderBy(s => s.rank){
+
+            for_each!(sample in robot.samples.sort_by_key(|s| s.rank){
                if index != 0 {
                    //
-                   let mut previousSample: Sample = robot.samples.OrderBy(s => s.rank)[index-1];
-                   if robot.CanDoSample(previousSample) {
-                       needed[previousSample.gain.parse::<i32>()unwrap()] -=1;
+                   let mut previous_sample: Sample = robot.samples.sort_by_key(|s| s.rank)[index-1];
+                   if robot.can_do_sample(previous_sample) {
+                       needed[previous_sample.gain.parse::<i32>()unwrap()] -=1;
                    }
                } 
-               if robot.CanCollectMolecules(sample) {
+               if robot.can_collect_molecules(sample) {
                    for i in 0..5 as usize {
                        needed[i] += cmp::max(sample.cost[i] - robot.expertise[i], 0);
-                       if needed.Sum() > 10 {
+                       if needed.sum() > 10 {
                            //
-                           if robot.samples.OrderBy( s => s.rank).IndexOf(sample) !=0 {
+                           if robot.samples.sort_by_key(|s| s.rank).iter().position(|&r| r == sample).unwrap() !=0 {
                                 needed = [0,0,0,0,0];
                            }
                            println!("First break");
@@ -148,17 +149,17 @@ impl Molecules for Module {
                        }    
                    }
                    println!("needed: {}", needed);
-                   if needed.Sum() > 10 {
+                   if needed.sum() > 10 {
                        //
-                       if robot.samples.OrderBy(s => s.rank).IndexOf(sample) != 0 {
+                       if robot.samples.sort_by_key(|s| s.rank).iter().position(|&r| r == sample).unwrap() != 0 {
                             needed = [0,0,0,0,0];
                        }
                        println!("Second break");
                        break;
                    } 
-                   if !robot.CanResearchSample(sample) {
+                   if !robot.can_research_sample(sample) {
                        println!("Cannot research sample");
-                       if robot.CanDoSample(sample) && needed.Sum() <=10 {
+                       if robot.can_do_sample(sample) && needed.sum() <=10 {
                            println!("Beginning molecule collection");
                            for i in 0...5 as usize{
                                //
@@ -166,7 +167,7 @@ impl Molecules for Module {
                                if needed[i] - robot.storage[i] > 0 && Player.available[i] >0 {
                                    println!(" : Yes" );
                                    //
-                                   robot.Connect((MoleculeType)i);
+                                   robot.connect((MoleculeType)i);
                                    return;
                                }else {
                                    println!(" : No");
@@ -177,29 +178,29 @@ impl Molecules for Module {
                }
             });
             //
-            if SampleResearchable(robot) || needed.Sum() > 10 {
+            if sample_researchable(robot) || needed.sum() > 10 {
               println!("needed: {}", needed );  
               println!("Can research sample, goto lab");
-              robot.GoTo("LABORATORY"); 
+              robot.go_to("LABORATORY");
               return;
             }else{
                 println!("needed: {}",needed );
                 println!("Cannot research sample, goto diag");
-                robot.GoTo("DOAGNOSIS");
+                robot.go_to("DOAGNOSIS");
                 return;
             }
             return;
         }
         else{
-            if !SampleResearchable(robot) {
+            if !sample_researchable(robot) {
                 println("+10 needed: {}", needed);
                 println!("Cannot research sample, goto diag" );
-                robot.GoTo("DIAGNOSIS");
+                robot.go_to("DIAGNOSIS");
                 return;
             }else{
                 println("+10 needed: {}", needed);
                 println!("Can research sample, goto lab" );
-                robot.GoTo("LABORATORY");
+                robot.go_to("LABORATORY");
                 return;
             }
         }
@@ -208,27 +209,27 @@ impl Molecules for Module {
 }
 
 impl Laboratory for Module {
-    fn GetDesicion(robot: Robot) -> (){
-        if SampleResearchable(robot) {
+    fn get_desicion(robot: Robot) -> (){
+        if sample_researchable(robot) {
             for_each!(sample in robot.samples{
-                if robot.CanResearchSample(sample) {
-                    robot.Connect(sample.id);
+                if robot.can_research_sample(sample) {
+                    robot.connect(sample.id);
                     return;
                 }
             });
         }
         //
-        if !SampleDoable(robot) || robot.samples.Count <2 {
+        if !sample_doable(&robot) || robot.samples.len() <2 {
             //
-            if robot.samples.Count <3 {
-                robot.GoTo("SAMPLES");
+            if robot.samples.len() <3 {
+                robot.go_to("SAMPLES");
                 return;
             }else{
-                robot.GoTo("DIAGNOSIS");
+                robot.go_to("DIAGNOSIS");
                 return;
             }
         }else {
-            robot.GoTo("MOLECULES");
+            robot.go_to("MOLECULES");
             return;
         }
         return;
@@ -236,7 +237,7 @@ impl Laboratory for Module {
 }
 
 struct Project{
-    expertise: [i32],
+    expertise: [i32;256],
 }
 
 struct Sample{
@@ -248,67 +249,62 @@ struct Sample{
     diagnosticated: bool,
 }
 
-impl Struct{
-    //
-    //diagnosticated = Array.exist(cost, number == -1) ? false: true;
-}
-
 struct Molecule {
     moltype : MoleculeType,
 }
 
 struct Robot{
-    samples: vec![],
+    samples: Vec::new(),
     target: Module,
     eta: i32, 
     score: i32,
     //
     storage: [i32],
     expertise: [i32],
-    toBeResearched: Queue<isize> = queue![],
+    toBeResearched: Queue<isize>, //= queue![],
 }
 
 impl Robot{
-    fn Update() ->(){
-        target.GetDesicion();
+    fn update() ->(){
+        target.get_desicion();
     }
 
-    fn CanCollectMolecules(sample: Sample) -> bool{
-        let mut nbNeeded: i32 = 0;
-        let mut canDo:bool = true;
+    fn can_collect_molecules(sample: Sample) -> bool{
+        let mut nb_needed: i32 = 0;
+        let mut can_do:bool = true;
 
         for i in 0..5 as usize{
-            nbNeeded += cmp::max(0, sample.cost[i] - storage[i] - expertise[i]);
+            nb_needed += cmp::max(0, sample.cost[i] - storage[i] - expertise[i]);
         }
         //
-        if nbNeeded > (10 - storage.Sum()) {
-            canDo = false;
+        if nb_needed > (10 - storage.sum()) {
+            can_do = false;
         }
-        canDo;
+        can_do;
     }
 
-    fn SamplesDoable() -> bool{
+    fn samples_doable() -> bool{
         for_each!(sample in samples{
-            if CanDoSample(sample) {
+            if can_do_sample(sample) {
                 true;
             }
         });
         false;
     }
 
-    fn SamplesResearchable() -> bool{
+    fn samples_researchable() -> bool{
         for_each!(sample in samples{
-            if CanResearchSample(sample) {
+            if can_research_sample(sample) {
                 true;
             }
         });
         false;
     }
 
-    fn IsSampleGoodForProjects(sample: Sample) -> bool{
-        let mut isGood:bool = true;
+    fn is_sample_good_for_projects(sample: Sample) -> bool{
+        let mut is_good:bool = true;
         //
-        if expertise.Sum() >= 6 {
+        if expertise.sum() >= 6 {
             let mut goals:[i32;5] = [0,0,0,0,0];
             for_each!(project in Player.projects{
                 for i in 0..5 as usize{
@@ -316,35 +312,35 @@ impl Robot{
                 }
             });
 
-            let mut gainMolecule:i32 = sample.gain;
-            if goals[gainMolecule] <= expertise[gainMolecule] {
-                isGood = false;
+            let mut gain_molecule:i32 = sample.gain.parse::<i32>().unwrap();
+            if goals[gain_molecule] <= expertise[gain_molecule] {
+                is_good = false;
             }
         }
-        isGood;
+        is_good;
     }
 
-    fn ScoreFromProject(project: Project) ->i32{
+    fn score_from_project(project: Project) ->i32{
         let mut score:i32 = 0;
         for i in 0..5 as usize{
-            score += cmp::max(project.expertise[i] -expertise[i],0);
+            score += cmp::max(project.expertise[i] - expertise[i],0);
         }
         score;
     }
 
-    fn IsCloseToProjectEnd(sample: Sample) -> bool{
-        let mut closestProject: Project = ClosestProject();
+    fn is_close_to_project_end(sample: Sample) -> bool{
+        let mut closest_project: Project = closest_project();
 
-        if CanDoSample(sample) {
-            let mut molecule:i32 = sample.gain;
-            if closestProject.expertise[molecule] > expertise[molecule] && ScoreFromProject(closestProject) <32 {
+        if can_do_sample(sample) {
+            let mut molecule: i32 = sample.gain.parse::<i32>().unwrap();
+            if closest_project.expertise[molecule] > expertise[molecule] && score_from_project(closest_project) <32 {
                 true;
             }
         }
         false;
     }
 
-    fn neededForSample(sample: Sample) -> i32{
+    fn needed_for_sample(sample: Sample) -> i32{
         let mut needed:[i32;5] = [0,0,0,0,0];
         for i in 0..5 as usize{
             needed[i] = cmp::max(sample.cost[i] -expertise[i] - storage[i],0);
@@ -352,70 +348,68 @@ impl Robot{
         needed.Sum();
     }
 
-    fn ClosestProject() -> Project {
-        let mut minScore: i32 = 20;
-        let mut cProject = Player.projects.First();
+    fn closest_project() -> Project {
+        let mut min_score: i32 = 20;
+        let mut c_project = Player.projects.First();
 
         for_each!(p in Player.Projects{
-            let mut tempScore:i32 = ScoreFromProject(p);
-            if tempScore < minScore && tempScore > 0 {
-                minScore = tempScore;
-                cProject = p;
+            let mut temp_score:i32 = score_from_project(p);
+            if temp_score < min_score && temp_score > 0 {
+                min_score = temp_score;
+                c_project = p;
             }
         });
-        println!("Project vise: {}, ecart: {}",Player.projects.IndexOf(cProject),  minScore);
-        cProject;
+        println!("Project vise: {}, ecart: {}",Player.projects.iter().position(|&r| r == cProject).unwrap(),  min_score);
+        c_project;
     }
 
-    fn ChooseDiagnosticableSample() -> Sample {
-        // ???
-       // let tempSamples: Vec =
-   //     List<Sample> tempSamples = samples.Where(sample => sample.diagnosticated == false).ToList();
-     //   return tempSamples.Count == 0 ? null : tempSamples.OrderByDescending(sample => sample.health).First();
-    
+    fn choose_diagnosticable_sample() -> Sample {
+         let mut temp_samples = Vec::new();
+        temp_samples = samples.find(|&&x| diagnosticated== false);
+        temp_samples.sort_by_key(|x| x.health)[0];
     }
 
-    fn CanResearchSample(sample: Sample) -> bool {
-        let mut canDo:bool = true;
+    fn can_research_sample(sample: Sample) -> bool {
+        let mut can_do:bool = true;
 
         for i in 0..3 as usize{
             if storage[i] + expertise[i] < sample.cost[i] {
-                canDo = false;                
+                can_do = false;
             }
         }
-        println!("Sample {} can be researched {}", samples.IndexOf(sample), canDo);
-        canDo;
+        println!("Sample {} can be researched {}", samples.iter().position(|&r| r ==sample).unwrap(), can_do);
+        can_do;
     }
 
-    fn CanDoSample(sample: Sample) -> bool{
-        let mut canDo:bool = true;
-        if !CanResearchSample(sample) && storage.Sum() >=10 || IsSampleGoodForProjects(sample) {
-            canDo = false;
+    fn can_do_sample(sample: Sample) -> bool{
+        let mut can_do:bool = true;
+        if !can_research_sample(sample) && storage.sum() >=10 || is_sample_good_for_projects(&sample) {
+            can_do = false;
         }else{
             for i in 0..5 as usize{
                 if Player.available[i] + storage[i] + expertise[i] < sample.cost[i] {
-                    canDo = false;
+                    can_do = false;
                     break;
                 }
             }
         }
-        print!("Sample {} can be done {}", samples.IndexOf(sample), canDo);
-        return canDo;
+        print!("Sample {} can be done {}", samples(&sample), can_do);
+        return can_do;
     }
 
-    fn GoTo(module: String) ->(){
+    fn go_to(module: String) ->(){
         println!("GOTO {}", module);
     }
 
-    fn Connect(id:i32) ->(){
+    fn connect(id:i32) ->(){
         println!("CONNECT {}", id);
     }
 
-    fn ConnectMol(moltype: MoleculeType) -> (){
+    fn connect_mol(moltype: MoleculeType) -> (){
         println!("CONNECT {}", moltype );
     }
 
-    fn Wait() -> (){
+    fn wait() -> (){
         println!("WAIT");
     }
 
@@ -423,8 +417,7 @@ impl Robot{
 
 struct Player {
     samplesTaken: i32,
-    available: [i32],
-    //
+    available: [i32;256],
     projects: Vec::new(),
     robots: Vec::new(),
     samples: Vec::new(),
@@ -439,7 +432,7 @@ impl Player{
     * Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
     **/
     fn main() {
-        let mut firstTurn:bool = true;
+        let mut first_turn:bool = true;
 
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
@@ -451,9 +444,10 @@ impl Player{
             let a = parse_input!(inputs[0], i32);
             let b = parse_input!(inputs[1], i32);
             let c = parse_input!(inputs[2], i32);
-            let d = parse_input!(inputs[3], i32); 
+            let d = parse_input!(inputs[3], i32);
+            let ee = parse_input!(inputs[4], i32);
 
-            let mut project: [i32;5] = [a,b,c,d,e];
+            let mut project: [i32;5] = [a,b,c,d,ee];
             projects.push(project);
         }
 
@@ -480,31 +474,31 @@ impl Player{
                 let expertise_d = parse_input!(inputs[11], i32);
                 let expertise_e = parse_input!(inputs[12], i32);
 
-                let mut modTarget:Module = None;
+                let mut mod_target:Module = None;
                 match target{
                     "START_POS" =>{
-                        modTarget = StartPoint();
+                        mod_target = StartPoint();
                     },
                     "SAMPLES" =>{
-                        modTarget = Samples();
+                        mod_target = Samples();
                     },
                     "DIAGNOSIS" =>{
-                        modTarget = Diagnosis();
+                        mod_target = Diagnosis();
                     },
                     "MOLECULES" => {
-                        modTarget = Molecules();
+                        mod_target = Molecules();
                     },
                     "LABORATORY" =>{
-                        modTarget = Laboratory();
+                        mod_target = Laboratory();
                     },
                     _ => {
                     }
                 }
 
-                let mut storageArray: [i32;5] = [storage_a, storage_b, storage_c, storage_d, storage_e];
-                let mut expertiseArray: [i32;5] = [expertise_a, expertise_b, expertise_c, expertise_d, expertise_e];
+                let mut storage_array: [i32;5] = [storage_a, storage_b, storage_c, storage_d, storage_e];
+                let mut expertise_array: [i32;5] = [expertise_a, expertise_b, expertise_c, expertise_d, expertise_e];
 
-                let rbt = Robot(modTarget, eta,score, storageArray, expertiseArray);
+                let rbt = Robot(mod_target, eta,score, storage_array, expertise_array);
                 robots.push(rbt);
 
 
@@ -537,44 +531,41 @@ impl Player{
 
                 let mut cost_array: [i32;5] = [cost_a, cost_b, cost_c, cost_d, cost_e];
 
-                let thisSample = Sample(sample_id, cost_array, health, rank, expertise_gain);
+                let this_sample = Sample(sample_id, cost_array, health, rank, expertise_gain);
                 
                 match carried_by{
                     -1 =>{
-                        samples.push(thisSample);
+                        samples.push(this_sample);
                     },
                     0 => {
-                        robots[0].samples.push(thisSample);
+                        robots[0].samples.push(this_sample);
                     },
                     1 => {
-                        robots[1].samples.push(thisSample);
+                        robots[1].samples.push(this_sample);
                     }
                 }
 
                 let mut my_robot: Robot = robots[0];
                 println!("Module : {}", my_robot.target);
-                println!("Storage (A B C D E) : {}", my_robot.storage);
-                println!("Expert. (A B C D E) : {}", my_robot.expertise);
+                println!("Storage (a b c d e) : {}", my_robot.storage);
+                println!("Expert. (a b c d e) : {}", my_robot.expertise);
                 let mut potential: [i32;5] = [0,0,0,0,0];
                 for i in 0..5 as usize{
                     potential[i] = my_robot.storage[i] + my_robot.expertise[i];
                 }
 
                 for_each!(project in projects{
-                    println!("Project {} Expertise : {}", projects.IndexOf(project), project.expertise);
+                    println!("Project {} Expertise : {}", projects.iter().position(|&r| r == project).unwrap(), project.expertise);
                 });
 
-                println!("");
-                println!("------------- SAMPLES -------------");
-                println!("");
+                println!("\n------------- SAMPLES -------------\n");
 
-                println!("Potential (A B C D E) : {}", potential);
-                println!("Available (A B C D E) : {}", available);
-                println!("");
+                println!("Potential (a b c d e) : {}", potential);
+                println!("Available (a b c d e) : {}", available);
 
                 //
-                for_each!(sample in myRobot.samples.OrderByDescending(item => item.health){
-                    println!("Samp Cost (A B C D E) : {} - Rank {} - Health : {} - Gain : {} - ID : " sample.cost, sample.rank, sample.health, sample.gain, sample.id);
+                for_each!(sample in myRobot.samples.sort_by_key(|x| -x.health){
+                    println!("Samp Cost (a b c d e) : {} - Rank {} - Health : {} - Gain : {} - ID : " sample.cost, sample.rank, sample.health, sample.gain, sample.id);
                 });
 
                 my_robot.Update();

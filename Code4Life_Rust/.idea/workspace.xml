@@ -23,6 +23,27 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+  </component>
+  <component name="RunManager">
+    <configuration name="Run Code4Life_Rust" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="run --package Code4Life_Rust --bin Code4Life_Rust" />
+      <option name="allFeatures" value="false" />
+      <option name="nocapture" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cargo Command.Run Code4Life_Rust" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
@@ -42,9 +63,29 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="431" y="145" key="search.everywhere.popup" timestamp="1590426422305">
+    <state width="1493" height="210" key="GridCell.Tab.0.bottom" timestamp="1590443363993">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="431" y="145" key="search.everywhere.popup/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590426422305" />
+    <state width="1493" height="210" key="GridCell.Tab.0.bottom/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590443363993" />
+    <state width="1493" height="210" key="GridCell.Tab.0.center" timestamp="1590443363993">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="210" key="GridCell.Tab.0.center/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590443363993" />
+    <state width="1493" height="210" key="GridCell.Tab.0.left" timestamp="1590443363993">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="210" key="GridCell.Tab.0.left/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590443363993" />
+    <state width="1493" height="210" key="GridCell.Tab.0.right" timestamp="1590443363993">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1493" height="210" key="GridCell.Tab.0.right/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590443363993" />
+    <state x="277" y="57" key="SettingsEditor" timestamp="1590437859536">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="277" y="57" key="SettingsEditor/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590437859536" />
+    <state x="430" y="145" width="672" height="678" key="search.everywhere.popup" timestamp="1590444905765">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="430" y="145" width="672" height="678" key="search.everywhere.popup/0.0.1536.824/-1024.95.1024.728@0.0.1536.824" timestamp="1590444905765" />
   </component>
 </project>
