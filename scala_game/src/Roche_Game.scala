@@ -6,7 +6,7 @@
   import scala.StringContext._
 
   /**
-   * Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
+   Bring data on patient samples from the diagnosis machine to the laboratory with enough molecules to produce medicine!
    **/
 
   object MoleculeType extends Enumeration {
