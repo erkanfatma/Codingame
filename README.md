@@ -3,6 +3,8 @@
 Group Members : Tuğba Güler / Fatma Erkan 
 
 Code4Life - Roche Game
+
+Game Link: 
 https://www.codingame.com/ide/puzzle/code4life
 
 The game has been implemented in Scala and Rust languages which are functional programming languages.

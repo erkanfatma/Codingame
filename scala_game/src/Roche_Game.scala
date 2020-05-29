@@ -83,7 +83,7 @@
             case "LABORATORY" => modTarget = new Laboratory()
           }
 
-          robots+ =new Robot{
+          robots+ = new Robot{
             override var target: Module = _
             override var eta: Int = _
             override var score: Int = _
@@ -140,8 +140,8 @@
 
           carriedBy match {
             case -1 => samples+ = (thisSample)
-            case 0 => robots(0).samples+ =thisSample
-            case 1 => robots(1).samples+ =thisSample
+            case 0 => robots(0).samples+ = thisSample
+            case 1 => robots(1).samples+ = thisSample
           }
         }
       }
@@ -265,7 +265,7 @@
     def IsSampleGoodForProjects(sample: Sample): Boolean = {
       var isGood: Boolean = true
       if (6 <= expertise.sum) {
-        val goals = new Array[Int](5)(0, 0, 0, 0, 0)
+        val goals = new Array[Int](5)
         val player: Player = new Player()
         for (project <- player.projects) {
           for (i <- 0 until 5) {
@@ -318,7 +318,7 @@
     }
 
     def neededForSample(sample: Sample): Int = {
-      val needed: Array[Int] = new Array[Int](5)(0, 0, 0, 0, 0)
+      val needed: Array[Int] = new Array[Int](5)
       for (i <- 0 until 5) {
         needed(i) = Math.max(sample.cost(i) - expertise(i) - storage(i), 0)
       }
@@ -341,7 +341,7 @@
     }
 
     def ChooseDiagnosticableSample(): Sample = {
-      val tempSamples: List[Sample] = samples.filter(_.diagnosticated == false);
+      val tempSamples: List[Sample] = samples.filter(_.diagnosticated == false)
       if (tempSamples.length == 0) {
         return null
       }
@@ -422,16 +422,16 @@
           return
         }
         else if (robot.expertise.sum < 10) {
-          robot.Connect(2);
+          robot.Connect(2)
           return
         }
         else {
-          robot.Connect(3);
+          robot.Connect(3)
           return
         }
       } else {
-        robot.GoTo("DIAGNOSIS");
-        return;
+        robot.GoTo("DIAGNOSIS")
+        return
       }
       return
     }
@@ -445,12 +445,14 @@
         return
       }
       else {
+        // We put apart samples not realisable
         for (s <- robot.samples) {
           if (!robot.CanDoSample(s) || (robot.neededForSample(s) > 6 && s.rank < 3)) {
             robot.Connect(s.id)
             return
           }
         }
+        // We take researchable samples if they exist in the cloud
         if (robot.samples.length < 3) {
           val player: Player = new Player()
           for (s <- player.samples) {
@@ -460,6 +462,7 @@
             }
           }
         }
+        // If we're really close to one project, we ditch all samples that do not help to finish it
         if (robot.samples.length > 0 && robot.ScoreFromProject(robot.ClosestProject()) < 1) {
           for (sample <- robot.samples) {
             if (!robot.IsCloseToProjectEnd(sample)) {
@@ -471,13 +474,15 @@
         var module: Module = new Module {
           override def GetDecision(robot: Robot): Unit = ???
         }
+        // if at least one sample is researchable goto lab
         if (module.SampleResearchable(robot): Boolean) {
           robot.GoTo("LABORATORY")
           return
         }
+        // if at least one sample is realisable goto molecules
         else if (SampleDoAble(robot)) {
-          robot.GoTo("MOLECULES");
-          return;
+          robot.GoTo("MOLECULES")
+          return
         }
       }
       robot.GoTo("SAMPLES")
@@ -487,7 +492,7 @@
 
   class Molecules extends Module {
     override def GetDecision(robot: Robot): Unit = {
-      val needed: Array[Int] = new Array[Int](5)(0, 0, 0, 0, 0)
+      val needed: Array[Int] = new Array[Int](5)
       if (robot.storage.sum < 10) {
         val index: Int = 0
         for (sample <- robot.samples.sortBy(s => s.rank)) {
@@ -502,7 +507,6 @@
               needed(i) += Math.max(sample.cost(i) - robot.expertise(i), 0)
               if (needed.sum > 10) {
                 if (robot.samples.sortBy(s => s.rank).indexOf(sample) != 0) {
-                  val needed: Array[Int] = new Array[Int](5)(0, 0, 0, 0, 0)
                 }
                 Console.err.println("First Break")
                 break()
@@ -511,7 +515,6 @@
             Console.err.println("needed : " + needed)
             if (needed.sum > 10) {
               if (robot.samples.sortBy(s => s.rank).indexOf(sample) != 0) {
-                val needed: Array[Int] = new Array[Int](5)(0, 0, 0, 0, 0)
               }
               Console.err.println("Second Break")
               break()
@@ -595,5 +598,3 @@
       return
     }
   }
-
-
