@@ -11,16 +11,20 @@ extern crate queues;
 use queues::*;
 use crate::MoleculeType::e;
 
+// To define molecule types in the game
 enum MoleculeType { a, b, c, d, e}
  
+// Skeleton for game
 trait Module{
+    //To define decision of robot
      fn get_desicion(robot: Robot) -> ();
+     //Check if any sample researchable
      fn sample_researchable(robot: Robot) -> bool{
          let mut can_do: bool = robot.samples_researchable();
          println!("At least one research can be done: {}" , can_do);
         can_do;
      }
-
+    //Check if any sample can do
      fn sample_doable(robot: Robot) -> bool{
          let mut can_do: bool = robot.samples_doable();
          println!("At least one sample can be done: {}", can_do);
@@ -28,24 +32,33 @@ trait Module{
      }
 }
  
+//To run at first, robot goes to samples with goto method in the code.
 impl StartPoint for Module {
     fn get_desicion(robot: Robot) -> (){
         robot.go_to("SAMPLES");
     }
 }
  
+
 impl Samples for Module {
+    //decision for Samples module
     fn get_desicion(robot: Robot) -> (){
         let mut rng = rand::thread_rng();
          if robot.expertise.sum() == 0 {
+             //check if samples contains less than 2 elements
              if robot.samples.len() <2 {
+                 //then connect 1 which is id
                  robot.connect(1);
                  return;
              }else{
-                 robot.go_to("DIAGNOSIS");
+                 //otherwise, go to diagnosis
+                robot.go_to("DIAGNOSIS");
                  return;
              }
-         }else if robot.samples.len() <3 {
+         }
+         //if samples contains less than 3 elements
+         else if robot.samples.len() <3 {
+             //if score of the player is less than 1
              if robot.score_from_project(robot.closest_project())<1 {
                  robot.connect(rng.gen_range(1, 4));
                  return;
@@ -69,14 +82,17 @@ impl Samples for Module {
 }
  
 impl Diagnosis for Module {
+    //Decision for diagnosis
     fn get_desicion(robot: Robot) -> (){
+        // Select a sample which can be diagnosticable by robot
         let selected_sample: Sample = robot.choose_diagnosticable_sample();
+
         if selected_sample == None {
             robot.connect(selected_sample.id);
             return;
         }
         else{
-            // We put apart samples not realisable
+            //Check samples that robot has one by one
             for_each!(s in robot.Samples{
                 if !robot.can_do_sample(s) || (robot.needed_for_sample(s) >6 && s.rank <3) {
                     robot.connect(s.id);
@@ -86,7 +102,9 @@ impl Diagnosis for Module {
 
             // We take researchable samples if they exist in the cloud
             if robot.samples.len()<3 {
+                //iterate samples one by one
                 for_each!(s in Player.samples{
+                    //if sample can be researchabe and robot needs sample
                     if robot._can_research_sample(s) && robot.needed_for_sample(s) <3 {
                         robot.connect(s.id);
                         return;
@@ -94,8 +112,9 @@ impl Diagnosis for Module {
                 });
             }
 
-            // If we're really close to one project, we ditch all samples that do not help to finish it
+            //If robot has any sample and score of the player smaller than 1
             if robot.samples.len() >0 && robot.score_from_project(robot.closest_project())<1 {
+                //then control samples that robot has 
                 for_each!(sample in robot.samples{
                     if !robot.is_close_to_project_end(sample) {
                         robot.connect(sample.id);
@@ -115,27 +134,28 @@ impl Diagnosis for Module {
                 return;
             }
         }
+        // go to sample and collect new samples
         robot.go_to("SAMPLES");
         return;
     }
 }
  
 impl Molecules for Module {
+    //decision method of Molecules
     fn get_desicion(robot: Robot) -> (){
         let mut needed:[i32;5] = [0,0,0,0,0];
-        //
+        //A robot can carry at most 10 molecule
         if robot.storage.sum() <10 {
             let index: i32 = 0;
-            //
-
+            //iterate samples depend on rank numbers from less to more
             for_each!(sample in robot.samples.sort_by_key(|s| s.rank){
                if index != 0 {
-                   //
                    let mut previous_sample: Sample = robot.samples.sort_by_key(|s| s.rank)[index-1];
                    if robot.can_do_sample(previous_sample) {
                        needed[previous_sample.gain.parse::<i32>()unwrap()] -=1;
                    }
                } 
+               //Check if robot can collect molecule
                if robot.can_collect_molecules(sample) {
                    for i in 0..5 as usize {
                        needed[i] += cmp::max(sample.cost[i] - robot.expertise[i], 0);
@@ -157,12 +177,12 @@ impl Molecules for Module {
                        println!("Second break");
                        break;
                    } 
+                   //control if robot can not research sample
                    if !robot.can_research_sample(sample) {
                        println!("Cannot research sample");
                        if robot.can_do_sample(sample) && needed.sum() <=10 {
                            println!("Beginning molecule collection");
                            for i in 0...5 as usize{
-                               //
                                println!("Collection module {} ??", (MoleculeType)i) ;
                                if needed[i] - robot.storage[i] > 0 && Player.available[i] >0 {
                                    println!(" : Yes" );
@@ -177,7 +197,7 @@ impl Molecules for Module {
                    }   
                }
             });
-            //
+            //check if sample researchable or needed sequence sum is greater than 10
             if sample_researchable(robot) || needed.sum() > 10 {
               println!("needed: {}", needed );  
               println!("Can research sample, goto lab");
@@ -191,6 +211,7 @@ impl Molecules for Module {
             }
             return;
         }
+        //If sample can not be researchable
         else{
             if !sample_researchable(robot) {
                 println("+10 needed: {}", needed);
@@ -209,7 +230,9 @@ impl Molecules for Module {
 }
 
 impl Laboratory for Module {
+    //Definition of robot moves in laboratory.
     fn get_desicion(robot: Robot) -> (){
+        
         if sample_researchable(robot) {
             for_each!(sample in robot.samples{
                 if robot.can_research_sample(sample) {
@@ -218,17 +241,20 @@ impl Laboratory for Module {
                 }
             });
         }
-        //
+        //If any sample can be researchable then robot research depending on list iterations.
         if !sample_doable(&robot) || robot.samples.len() <2 {
-            //
             if robot.samples.len() <3 {
                 robot.go_to("SAMPLES");
                 return;
-            }else{
+            }
+            //Otherwise write that robot go to Diagnosis module
+            else{
                 robot.go_to("DIAGNOSIS");
                 return;
             }
-        }else {
+        }
+        //Otherwise write that robot go to Molecules module.
+        else {
             robot.go_to("MOLECULES");
             return;
         }
@@ -236,10 +262,12 @@ impl Laboratory for Module {
     }
 }
 
+// To get information of modules
 struct Project{
     expertise: [i32;256],
 }
 
+//Sample object will be defined its own properties. 
 struct Sample{
     id :i32,
     cost: [i32],
@@ -249,9 +277,11 @@ struct Sample{
     diagnosticated: bool,
 }
 
+//Molecule class is where MoleculeType property defined. 
 struct Molecule {
     moltype : MoleculeType,
 }
+
 
 struct Robot{
     samples: Vec::new(),
@@ -265,10 +295,12 @@ struct Robot{
 }
 
 impl Robot{
+    //To update destination of robot
     fn update() ->(){
         target.get_desicion();
     }
 
+    //To control if collect molecules needed
     fn can_collect_molecules(sample: Sample) -> bool{
         let mut nb_needed: i32 = 0;
         let mut can_do:bool = true;
@@ -283,6 +315,7 @@ impl Robot{
         can_do;
     }
 
+    //control if samples can be done
     fn samples_doable() -> bool{
         for_each!(sample in samples{
             if can_do_sample(sample) {
@@ -292,6 +325,7 @@ impl Robot{
         false;
     }
 
+    //Control if samples can be researchable
     fn samples_researchable() -> bool{
         for_each!(sample in samples{
             if can_research_sample(sample) {
@@ -301,10 +335,12 @@ impl Robot{
         false;
     }
 
+    //Evaluate if sample is convenient
     fn is_sample_good_for_projects(sample: Sample) -> bool{
         let mut is_good:bool = true;
         //
         if expertise.sum() >= 6 {
+            //to compute points depend on module
             let mut goals:[i32;5] = [0,0,0,0,0];
             for_each!(project in Player.projects{
                 for i in 0..5 as usize{
@@ -320,6 +356,7 @@ impl Robot{
         is_good;
     }
 
+    //Calculation of project score
     fn score_from_project(project: Project) ->i32{
         let mut score:i32 = 0;
         for i in 0..5 as usize{
@@ -328,6 +365,7 @@ impl Robot{
         score;
     }
 
+    //control if project is close to the most convenient solution
     fn is_close_to_project_end(sample: Sample) -> bool{
         let mut closest_project: Project = closest_project();
 
@@ -340,6 +378,7 @@ impl Robot{
         false;
     }
 
+    //to calculate neeeded depend on sample
     fn needed_for_sample(sample: Sample) -> i32{
         let mut needed:[i32;5] = [0,0,0,0,0];
         for i in 0..5 as usize{
@@ -348,6 +387,7 @@ impl Robot{
         needed.Sum();
     }
 
+    //To find closest point of the project
     fn closest_project() -> Project {
         let mut min_score: i32 = 20;
         let mut c_project = Player.projects.First();
@@ -363,12 +403,14 @@ impl Robot{
         c_project;
     }
 
+    //to define diagnosticable sample 
     fn choose_diagnosticable_sample() -> Sample {
          let mut temp_samples = Vec::new();
         temp_samples = samples.find(|&&x| diagnosticated== false);
         temp_samples.sort_by_key(|x| x.health)[0];
     }
 
+    //To control if sample can be researchable.
     fn can_research_sample(sample: Sample) -> bool {
         let mut can_do:bool = true;
 
@@ -381,6 +423,7 @@ impl Robot{
         can_do;
     }
 
+    //Control if any sample can be done
     fn can_do_sample(sample: Sample) -> bool{
         let mut can_do:bool = true;
         if !can_research_sample(sample) && storage.sum() >=10 || is_sample_good_for_projects(&sample) {
@@ -397,18 +440,22 @@ impl Robot{
         return can_do;
     }
 
+    //To send robot selected module
     fn go_to(module: String) ->(){
         println!("GOTO {}", module);
     }
 
+    //To connect robot selected module id 
     fn connect(id:i32) ->(){
         println!("CONNECT {}", id);
     }
 
+    //To connect robot selected molecule type 
     fn connect_mol(mol_type: MoleculeType) -> (){
         println!("CONNECT {}", mol_type );
     }
 
+    //Wait for next operation
     fn wait() -> (){
         println!("WAIT");
     }
