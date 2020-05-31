@@ -82,11 +82,8 @@ impl Samples for Module {
 }
  
 impl Diagnosis for Module {
-    //Decision for diagnosis
     fn get_desicion(robot: Robot) -> (){
-        // Select a sample which can be diagnosticable by robot
         let selected_sample: Sample = robot.choose_diagnosticable_sample();
-
         if selected_sample == None {
             robot.connect(selected_sample.id);
             return;
@@ -281,7 +278,6 @@ struct Sample{
 struct Molecule {
     moltype : MoleculeType,
 }
-
 
 struct Robot{
     samples: Vec::new(),
